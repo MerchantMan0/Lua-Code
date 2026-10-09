@@ -23,8 +23,11 @@
           frontend = luacode.frontend;
         });
 
-      # Example of starts API and Lua workers.
-      nixosModules.example = { config, lib, pkgs, ... }:
+      bundlers = forAllSystems (pkgs: {
+        docker = luacode: pkgs.callPackage ./docker.nix { inherit luacode; };
+      });
+
+      nixosModules.default = { config, lib, pkgs, ... }:
         let
           cfg = config.services.luacode;
           pkg = self.packages.${pkgs.stdenv.hostPlatform.system}.default;
