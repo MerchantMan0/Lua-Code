@@ -51,13 +51,14 @@
             services.lua-sandbox.enable = true;
 
             systemd.services.luacode = {
-              description = "Lua-Code API";
+              description = "Lua-Code API and web client";
               wantedBy = [ "multi-user.target" ];
               after = [ "network.target" "lua-sandbox.service" ];
               requires = [ "lua-sandbox.service" ];
               environment = {
                 NODE_ENV = "production";
                 LUA_WORKER_URL = "http://${config.services.lua-sandbox.bind}";
+                FRONTEND_DIR = "${pkg}/frontend";
               };
               serviceConfig = {
                 ExecStart = "${pkg.nodejs}/bin/node server.js";

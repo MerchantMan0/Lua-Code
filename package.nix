@@ -60,8 +60,9 @@ buildNpmPackage {
 
   installPhase = ''
     runHook preInstall
-    mkdir -p $out
+    mkdir -p $out/frontend
     cp -a server.js lib package.json node_modules $out/
+    cp -a ${frontend}/. $out/frontend/
     runHook postInstall
   '';
 
@@ -70,7 +71,7 @@ buildNpmPackage {
   };
 
   meta = {
-    description = "Lua-Code API";
+    description = "Lua-Code API and web client";
     license = lib.licenses.isc;
   };
 }
