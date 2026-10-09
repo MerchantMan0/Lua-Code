@@ -1,0 +1,45 @@
+{
+  "nodes": {
+    "lua-sandbox": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1791505735,
+        "narHash": "sha256-u4z8hnkRnmmClAj60rKdl+0bMTFD4C/MeIYXGW3R46I=",
+        "path": "../Lua-5.4-Sandbox",
+        "type": "path"
+      },
+      "original": {
+        "path": "../Lua-5.4-Sandbox",
+        "type": "path"
+      }
+    },
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1790046670,
+        "narHash": "sha256-MYiI+CzL0tuWgRPjGsKCDHqYs2T3OzMlMQWOYWG0qso=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "6774f7bc253789b113a4f39285dc0fa100abeacc",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "root": {
+      "inputs": {
+        "lua-sandbox": "lua-sandbox",
+        "nixpkgs": "nixpkgs"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}
