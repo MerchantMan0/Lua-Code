@@ -10,6 +10,7 @@ const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const nodemailer = require('nodemailer')
 const crypto = require('crypto')
+const path = require('path')
 
 const url = process.env.MONGODB_URI
 
@@ -842,6 +843,17 @@ api.get('/users/:user_id/submissions', async (req, res) => {
     res.status(503).json({ error: 'database_unavailable' })
   }
 })
+
+if (process.env.FRONTEND_DIR) {
+  const frontendDir = process.env.FRONTEND_DIR
+  app.use(express.static(frontendDir))
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api')) return next()
+    res.sendFile(path.join(frontendDir, 'index.html'), (err) => {
+      if (err) next()
+    })
+  })
+}
 
 app.use((req, res) => {
   res.status(404).json({ error: 'not_found' })
