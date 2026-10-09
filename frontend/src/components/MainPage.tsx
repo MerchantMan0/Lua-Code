@@ -17,7 +17,16 @@ import ForgotPassword from "./ForgotPassword.tsx";
 import Login from "./Login.tsx";
 import Register from "./Register.tsx";
 
-const DEFAULT_LUA = `-- Type Lua code here\nprint("Hello World")`;
+const DEFAULT_LUA = `-- Type Lua code here
+grid = {
+  {1, 2, 3},
+  {4, 5, 6},
+  {7, 8, 9},
+}
+
+function ASM(grid)
+    return grid
+end`;
 
 type AuthPanel = "login" | "register" | "forgot";
 
@@ -83,6 +92,7 @@ function MainPage({ token, setToken }: MainPageProps) {
 
   const [challengeId, setChallengeId] = useState<string | null>(null);
   const [challenge, setChallenge] = useState<Challenge | null>(null);
+  const [challengeError, setChallengeError] = useState<string | null>(null);
 
   const [editorTabs, setEditorTabs] = useState<EditorTab[]>([
     { id: "main", label: "solution.lua", source: DEFAULT_LUA },
@@ -213,12 +223,34 @@ function MainPage({ token, setToken }: MainPageProps) {
     const fetchChallenge = async () => {
       try {
         const res = await fetch(`${API_BASE}/challenges/current`);
-        const data = await res.json();
+        const body = await res.text();
 
+        let data: any = null;
+        try {
+          data = body ? JSON.parse(body) : null;
+        } catch {
+          throw new Error(
+            `GET /challenges/current returned ${res.status} with a non-JSON body: ${body.slice(0, 200)}`
+          );
+        }
+
+        if (!res.ok) {
+          throw new Error(
+            `GET /challenges/current failed with ${res.status}: ${data?.error ?? body.slice(0, 200)}`
+          );
+        }
+        if (!data?.id) {
+          throw new Error("GET /challenges/current returned no challenge id");
+        }
+
+        setChallengeError(null);
         setChallengeId(data.id);
         setChallenge(data);
       } catch (err) {
         console.error("Failed to load challenge", err);
+        setChallengeError(
+          err instanceof Error ? err.message : "Failed to load challenge"
+        );
       }
     };
 
@@ -309,7 +341,7 @@ function MainPage({ token, setToken }: MainPageProps) {
       <>
         <div className="app-grid">
           <div style={{ color: "white", padding: "20px" }}>
-            Loading challenge...
+            {challengeError ? `Could not load challenge: ${challengeError}` : "Loading challenge..."}
           </div>
         </div>
         {authDialog}

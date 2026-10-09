@@ -176,6 +176,9 @@ app.use(cors())
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 
+const api = express.Router()
+app.use('/api', api)
+
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader(
@@ -305,7 +308,7 @@ function staticLeaderboard(query) {
 }
 
 //should work
-app.post('/auth/register', async (req, res) => {
+api.post('/auth/register', async (req, res) => {
   try {
     const { email, password, username } = req.body
  
@@ -352,7 +355,7 @@ app.post('/auth/register', async (req, res) => {
 })
 
 //verify email
-app.get('/auth/verify-email', async (req, res) => {
+api.get('/auth/verify-email', async (req, res) => {
   try {
     const { token } = req.query
     if (!token) return res.status(400).json({ error: 'token is required' })
@@ -396,7 +399,7 @@ app.get('/auth/verify-email', async (req, res) => {
 })
 
 //resend
-app.post('/auth/resend-verification', async (req, res) => {
+api.post('/auth/resend-verification', async (req, res) => {
   try {
     const { email } = req.body
     if (!email) return res.status(400).json({ error: 'email is required' })
@@ -436,7 +439,7 @@ app.post('/auth/resend-verification', async (req, res) => {
   }
 })
 
-app.post('/auth/login', async (req, res) => {
+api.post('/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body
     if (!email || !password) {
@@ -471,7 +474,7 @@ app.post('/auth/login', async (req, res) => {
 })
 
 //works
-app.post('/auth/logout', requireBearer, async (req, res) => {
+api.post('/auth/logout', requireBearer, async (req, res) => {
   try {
     const token = req.headers.authorization.slice(7)
     await mongoDb().collection('token_denylist').insertOne({
@@ -488,7 +491,7 @@ app.post('/auth/logout', requireBearer, async (req, res) => {
 })
 
 //updated
-app.post('/auth/forgot-password', async (req, res) => {
+api.post('/auth/forgot-password', async (req, res) => {
   try {
     const { email } = req.body
     if (!email) return res.status(400).json({ error: 'email is required' })
@@ -532,7 +535,7 @@ app.post('/auth/forgot-password', async (req, res) => {
   }
 })
  
-app.post('/auth/reset-password', async (req, res) => {
+api.post('/auth/reset-password', async (req, res) => {
   try {
     const { token, new_password } = req.body
 
@@ -575,7 +578,7 @@ app.post('/auth/reset-password', async (req, res) => {
   }
 })
 
-app.get('/challenges/current', async (req, res) => {
+api.get('/challenges/current', async (req, res) => {
   try {
     const coll = mongoDb().collection(COLLECTION_CHALLENGES)
     //try to find open challenge, or go to most recent
@@ -591,7 +594,7 @@ app.get('/challenges/current', async (req, res) => {
   }
 })
 
-app.get('/challenges', requireBearer, async (req, res) => {
+api.get('/challenges', requireBearer, async (req, res) => {
   const { page, pageSize } = parseListPagination(req.query)
   const filter = {}
   if (req.query.week != null && String(req.query.week).trim() !== '') {
@@ -619,7 +622,7 @@ app.get('/challenges', requireBearer, async (req, res) => {
   }
 })
 
-app.get('/challenges/:challenge_id/leaderboard', async (req, res) => {
+api.get('/challenges/:challenge_id/leaderboard', async (req, res) => {
   const { page, pageSize } = parseListPagination(req.query)
   const sort   = req.query.sort === 'desc' ? -1 : 1
   const metric = ['gas', 'memory_bytes', 'lines'].includes(req.query.metric) ? req.query.metric : 'gas'
@@ -639,7 +642,7 @@ app.get('/challenges/:challenge_id/leaderboard', async (req, res) => {
   }
 })
 
-app.get('/challenges/:challenge_id/submissions', async (req, res) => {
+api.get('/challenges/:challenge_id/submissions', async (req, res) => {
   const { page, pageSize } = parseListPagination(req.query)
   const cid = req.params.challenge_id
   const skip = (page - 1) * pageSize
@@ -657,7 +660,7 @@ app.get('/challenges/:challenge_id/submissions', async (req, res) => {
   }
 })
 
-app.post('/challenges/:challenge_id/submissions', requireBearer, async (req, res) => {
+api.post('/challenges/:challenge_id/submissions', requireBearer, async (req, res) => {
   const userId = req.user && req.user.id != null ? String(req.user.id) : ''
   if (!userId) return res.status(401).json({ error: 'Invalid token payload' })
  
@@ -696,7 +699,7 @@ app.post('/challenges/:challenge_id/submissions', requireBearer, async (req, res
   }
 })
 
-app.get('/challenges/:challenge_id', async (req, res) => {
+api.get('/challenges/:challenge_id', async (req, res) => {
   try {
     const coll = mongoDb().collection(COLLECTION_CHALLENGES)
     const doc  = await coll.findOne({ id: req.params.challenge_id })
@@ -708,7 +711,7 @@ app.get('/challenges/:challenge_id', async (req, res) => {
   }
 })
 
-app.get('/submissions/:submission_id', async (req, res) => {
+api.get('/submissions/:submission_id', async (req, res) => {
   let oid
   try {
     oid = ObjectId.createFromHexString(req.params.submission_id)
@@ -725,7 +728,7 @@ app.get('/submissions/:submission_id', async (req, res) => {
   }
 })
 
-app.get('/submissions/:submission_id/source', requireBearer, async (req, res) => {
+api.get('/submissions/:submission_id/source', requireBearer, async (req, res) => {
   const id = req.params.submission_id
   let oid
   try {
@@ -755,7 +758,7 @@ app.get('/submissions/:submission_id/source', requireBearer, async (req, res) =>
   }
 })
 
-app.get('/leaderboard/global', async (req, res) => {
+api.get('/leaderboard/global', async (req, res) => {
   const { page, pageSize } = parseListPagination(req.query)
   const sort   = req.query.sort === 'desc' ? -1 : 1
   const metric = ['gas', 'memory_bytes', 'lines'].includes(req.query.metric) ? req.query.metric : 'gas'
@@ -775,7 +778,7 @@ app.get('/leaderboard/global', async (req, res) => {
   }
 })
 
-app.get('/users/me', requireBearer, async (req, res) => {
+api.get('/users/me', requireBearer, async (req, res) => {
   try {
     if (!ObjectId.isValid(req.user.id)) {
       return res.status(401).json({ error: 'Invalid token payload' })
@@ -793,7 +796,7 @@ app.get('/users/me', requireBearer, async (req, res) => {
   }
 })
 
-app.get('/users/:user_id', async (req, res) => {
+api.get('/users/:user_id', async (req, res) => {
   try {
     const userId = req.params.user_id
     if (!ObjectId.isValid(userId)) {
@@ -812,7 +815,7 @@ app.get('/users/:user_id', async (req, res) => {
   }
 })
 
-app.get('/users/:user_id/submissions', async (req, res) => {
+api.get('/users/:user_id/submissions', async (req, res) => {
   const { page, pageSize } = parseListPagination(req.query)
   const uid = req.params.user_id
   const skip = (page - 1) * pageSize
@@ -839,6 +842,11 @@ app.get('/users/:user_id/submissions', async (req, res) => {
     res.status(503).json({ error: 'database_unavailable' })
   }
 })
+
+app.use((req, res) => {
+  res.status(404).json({ error: 'not_found' })
+})
+
 async function start(options = {}) {
   const listen = options.listen !== false
 

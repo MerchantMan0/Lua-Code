@@ -33,7 +33,7 @@ describe('API integration', () => {
 
   it('rejects registration with invalid email', async () => {
     const res = await request(app)
-      .post('/auth/register')
+      .post('/api/auth/register')
       .send({ email: 'not-an-email', password: 'password123', username: 'u' })
     expect(res.status).toBe(400)
     expect(res.body.error).toMatch(/email/i)
@@ -41,7 +41,7 @@ describe('API integration', () => {
 
   it('rejects registration with short password', async () => {
     const res = await request(app)
-      .post('/auth/register')
+      .post('/api/auth/register')
       .send({ email: 'a@b.co', password: 'short', username: 'u' })
     expect(res.status).toBe(400)
     expect(res.body.error).toMatch(/password/i)
@@ -52,7 +52,7 @@ describe('API integration', () => {
     const password = 'password123'
 
     const reg = await request(app)
-      .post('/auth/register')
+      .post('/api/auth/register')
       .send({ email, password, username: 'integration_user' })
     expect(reg.status).toBe(201)
     expect(reg.body.user_id).toBeTruthy()
@@ -62,15 +62,15 @@ describe('API integration', () => {
     expect(row).toBeTruthy()
     expect(row.verification_token).toBeTruthy()
 
-    const verify = await request(app).get('/auth/verify-email').query({ token: row.verification_token })
+    const verify = await request(app).get('/api/auth/verify-email').query({ token: row.verification_token })
     expect(verify.status).toBe(200)
 
-    const login = await request(app).post('/auth/login').send({ email, password })
+    const login = await request(app).post('/api/auth/login').send({ email, password })
     expect(login.status).toBe(200)
     expect(login.body.access_token).toBeTruthy()
 
     const me = await request(app)
-      .get('/users/me')
+      .get('/api/users/me')
       .set('Authorization', `Bearer ${login.body.access_token}`)
     expect(me.status).toBe(200)
     expect(me.body.id).toBe(reg.body.user_id)
@@ -81,12 +81,12 @@ describe('API integration', () => {
     const email = `dup-${Date.now()}@example.com`
     const password = 'password123'
     const first = await request(app)
-      .post('/auth/register')
+      .post('/api/auth/register')
       .send({ email, password, username: 'a' })
     expect(first.status).toBe(201)
 
     const second = await request(app)
-      .post('/auth/register')
+      .post('/api/auth/register')
       .send({ email, password, username: 'b' })
     expect(second.status).toBe(409)
   })
@@ -95,17 +95,17 @@ describe('API integration', () => {
     const email = `sub-${Date.now()}@example.com`
     const password = 'password123'
     await request(app)
-      .post('/auth/register')
+      .post('/api/auth/register')
       .send({ email, password, username: 'submitter' })
     const users = client.db(process.env.MONGODB_DB).collection('users')
     const row = await users.findOne({ email: email.toLowerCase() })
-    await request(app).get('/auth/verify-email').query({ token: row.verification_token })
+    await request(app).get('/api/auth/verify-email').query({ token: row.verification_token })
 
-    const login = await request(app).post('/auth/login').send({ email, password })
+    const login = await request(app).post('/api/auth/login').send({ email, password })
     const token = login.body.access_token
 
     const res = await request(app)
-      .post(`/challenges/${CHALLENGE_ID}/submissions`)
+      .post(`/api/challenges/${CHALLENGE_ID}/submissions`)
       .set('Authorization', `Bearer ${token}`)
       .send({ language: 'lua', source: 'return true\n' })
 

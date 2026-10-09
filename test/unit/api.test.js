@@ -30,10 +30,10 @@ function bearer(claims) {
   return jwt.sign({ ...claims, exp }, secret)
 }
 
-describe('POST /auth/register', () => {
+describe('POST /api/auth/register', () => {
   it('returns 400 for invalid email', async () => {
     const res = await request(app)
-      .post('/auth/register')
+      .post('/api/auth/register')
       .send({ email: 'incorrect', password: 'longenough1' })
       .expect(400)
     assert.equal(res.body.error, 'valid email is required')
@@ -41,63 +41,63 @@ describe('POST /auth/register', () => {
 
   it('returns 400 for bad password', async () => {
     const res = await request(app)
-      .post('/auth/register')
+      .post('/api/auth/register')
       .send({ email: 'adfasdfregweghr@asgdhgdwgdf.com', password: 'short' })
       .expect(400)
     assert.equal(res.body.error, 'password must be at least 8 characters')
   })
 })
 
-describe('GET /auth/verify-email', () => {
+describe('GET /api/auth/verify-email', () => {
   it('returns 400 if token is missing', async () => {
-    const res = await request(app).get('/auth/verify-email').expect(400)
+    const res = await request(app).get('/api/auth/verify-email').expect(400)
     assert.equal(res.body.error, 'token is required')
   })
 })
 
-describe('POST /auth/resend-verification', () => {
+describe('POST /api/auth/resend-verification', () => {
   it('returns 400 if email is missing', async () => {
-    const res = await request(app).post('/auth/resend-verification').send({}).expect(400)
+    const res = await request(app).post('/api/auth/resend-verification').send({}).expect(400)
     assertJson(res)
     assert.equal(res.body.error, 'email is required')
   })
 })
 
-describe('POST /auth/login', () => {
+describe('POST /api/auth/login', () => {
   it('returns 400 if email & password is missing', async () => {
-    const res = await request(app).post('/auth/login').send({}).expect(400)
+    const res = await request(app).post('/api/auth/login').send({}).expect(400)
     assertJson(res)
     assert.equal(res.body.error, 'email and password are required')
   })
 })
 
-describe('POST /auth/logout', () => {
+describe('POST /api/auth/logout', () => {
   it('returns 401 if no Auth', async () => {
-    const res = await request(app).post('/auth/logout').expect(401)
+    const res = await request(app).post('/api/auth/logout').expect(401)
     assert.equal(res.body.error, 'Bearer token required')
   })
 
   it('returns 401 if bad JWT', async () => {
     const res = await request(app)
-      .post('/auth/logout')
+      .post('/api/auth/logout')
       .set('Authorization', 'Bearer not-a-jwt')
       .expect(401)
     assert.equal(res.body.error, 'Invalid or expired token')
   })
 })
 
-describe('POST /auth/forgot-password', () => {
+describe('POST /api/auth/forgot-password', () => {
   it('returns 400 if email is missing', async () => {
-    const res = await request(app).post('/auth/forgot-password').send({}).expect(400)
+    const res = await request(app).post('/api/auth/forgot-password').send({}).expect(400)
     assertJson(res)
     assert.equal(res.body.error, 'email is required')
   })
 })
 
-describe('POST /auth/reset-password', () => {
+describe('POST /api/auth/reset-password', () => {
   it('returns 400 if token or new_password is missing or too short', async () => {
     const res = await request(app)
-      .post('/auth/reset-password')
+      .post('/api/auth/reset-password')
       .send({ token: 'x', new_password: 'short' })
       .expect(400)
     assertJson(res)
@@ -105,9 +105,9 @@ describe('POST /auth/reset-password', () => {
   })
 })
 
-describe('GET /challenges/current', () => {
+describe('GET /api/challenges/current', () => {
   it('returns JSON', async () => {
-    const res = await request(app).get('/challenges/current')
+    const res = await request(app).get('/api/challenges/current')
     assertDbBackedGet(res, { okStatuses: [200, 404, 503] })
     if (res.status === 200) {
       assert.equal(typeof res.body.id, 'string')
@@ -118,9 +118,9 @@ describe('GET /challenges/current', () => {
   })
 })
 
-describe('GET /challenges', () => {
+describe('GET /api/challenges', () => {
   it('returns 401 if no Auth', async () => {
-    const res = await request(app).get('/challenges').expect(401)
+    const res = await request(app).get('/api/challenges').expect(401)
     assert.equal(res.body.error, 'Bearer token required')
   })
 
@@ -130,7 +130,7 @@ describe('GET /challenges', () => {
       email: 'test@safuiashfisad.com',
       username: 'tester',
     })
-    const res = await request(app).get('/challenges').set('Authorization', `Bearer ${token}`)
+    const res = await request(app).get('/api/challenges').set('Authorization', `Bearer ${token}`)
     assertDbBackedGet(res, { okStatuses: [200, 401, 503] })
     if (res.status === 200) {
       assert.ok(Array.isArray(res.body.items))
@@ -142,9 +142,9 @@ describe('GET /challenges', () => {
   })
 })
 
-describe('GET /challenges/:challenge_id/leaderboard', () => {
+describe('GET /api/challenges/:challenge_id/leaderboard', () => {
   it('returns JSON', async () => {
-    const res = await request(app).get('/challenges/demo-challenge/leaderboard')
+    const res = await request(app).get('/api/challenges/demo-challenge/leaderboard')
     assertDbBackedGet(res, { okStatuses: [200, 503] })
     if (res.status === 200) {
       assert.ok(Array.isArray(res.body.items))
@@ -154,9 +154,9 @@ describe('GET /challenges/:challenge_id/leaderboard', () => {
   })
 })
 
-describe('GET /challenges/:challenge_id/submissions', () => {
+describe('GET /api/challenges/:challenge_id/submissions', () => {
   it('returns JSON', async () => {
-    const res = await request(app).get('/challenges/demo-challenge/submissions')
+    const res = await request(app).get('/api/challenges/demo-challenge/submissions')
     assertDbBackedGet(res, { okStatuses: [200, 503] })
     if (res.status === 200) {
       assert.ok(Array.isArray(res.body.items))
@@ -165,10 +165,10 @@ describe('GET /challenges/:challenge_id/submissions', () => {
   })
 })
 
-describe('POST /challenges/:challenge_id/submissions', () => {
+describe('POST /api/challenges/:challenge_id/submissions', () => {
   it('returns 401 if no Auth', async () => {
     const res = await request(app)
-      .post('/challenges/demo-challenge/submissions')
+      .post('/api/challenges/demo-challenge/submissions')
       .send({ language: 'lua', source: 'return 1' })
       .expect(401)
     assert.equal(res.body.error, 'Bearer token required')
@@ -181,7 +181,7 @@ describe('POST /challenges/:challenge_id/submissions', () => {
       username: 'submitter',
     })
     const res = await request(app)
-      .post('/challenges/demo-challenge/submissions')
+      .post('/api/challenges/demo-challenge/submissions')
       .set('Authorization', `Bearer ${token}`)
       .send({ language: 'lua', source: 'return true' })
     assertJson(res)
@@ -191,33 +191,33 @@ describe('POST /challenges/:challenge_id/submissions', () => {
   })
 })
 
-describe('GET /challenges/:challenge_id', () => {
+describe('GET /api/challenges/:challenge_id', () => {
   it('returns JSON', async () => {
-    const res = await request(app).get('/challenges/nonexistent-challenge-id-xyz')
+    const res = await request(app).get('/api/challenges/nonexistent-challenge-id-xyz')
     assertDbBackedGet(res, { okStatuses: [200, 404, 503] })
     if (res.status === 404) assert.equal(res.body.error, 'Challenge not found')
     if (res.status === 200) assert.equal(typeof res.body.id, 'string')
   })
 })
 
-describe('GET /submissions/:submission_id', () => {
+describe('GET /api/submissions/:submission_id', () => {
   it('returns 404 if malformed submission id', async () => {
-    const res = await request(app).get('/submissions/not-hex').expect(404)
+    const res = await request(app).get('/api/submissions/not-hex').expect(404)
     assert.equal(res.body.error, 'not_found')
   })
 
   it('returns JSON for well-formed id (200, 404, or 503)', async () => {
     const id = new ObjectId().toHexString()
-    const res = await request(app).get(`/submissions/${id}`)
+    const res = await request(app).get(`/api/submissions/${id}`)
     assertDbBackedGet(res, { okStatuses: [200, 404, 503] })
     if (res.status === 404) assert.equal(res.body.error, 'not_found')
     if (res.status === 200) assert.equal(res.body.id, id)
   })
 })
 
-describe('GET /submissions/:submission_id/source', () => {
+describe('GET /api/submissions/:submission_id/source', () => {
   it('returns 401 if no Auth', async () => {
-    const res = await request(app).get('/submissions/fasfgtrgwegfsadcsadf/source').expect(401)
+    const res = await request(app).get('/api/submissions/fasfgtrgwegfsadcsadf/source').expect(401)
     assert.equal(res.body.error, 'Bearer token required')
   })
 
@@ -228,7 +228,7 @@ describe('GET /submissions/:submission_id/source', () => {
       username: 'src',
     })
     const res = await request(app)
-      .get('/submissions/gggggggggggggggggggggggg/source')
+      .get('/api/submissions/gggggggggggggggggggggggg/source')
       .set('Authorization', `Bearer ${token}`)
     assertJson(res)
     assert.ok([401, 404].includes(res.status), `status ${res.status}`)
@@ -244,7 +244,7 @@ describe('GET /submissions/:submission_id/source', () => {
     })
     const id = new ObjectId().toHexString()
     const res = await request(app)
-      .get(`/submissions/${id}/source`)
+      .get(`/api/submissions/${id}/source`)
       .set('Authorization', `Bearer ${token}`)
     assertDbBackedGet(res, { okStatuses: [200, 401, 404, 503] })
     if (res.status === 401) assert.equal(res.body.error, 'User not found')
@@ -256,9 +256,9 @@ describe('GET /submissions/:submission_id/source', () => {
   })
 })
 
-describe('GET /leaderboard/global', () => {
+describe('GET /api/leaderboard/global', () => {
   it('returns JSON', async () => {
-    const res = await request(app).get('/leaderboard/global')
+    const res = await request(app).get('/api/leaderboard/global')
     assertDbBackedGet(res, { okStatuses: [200, 503] })
     if (res.status === 200) {
       assert.ok(Array.isArray(res.body.items))
@@ -267,9 +267,9 @@ describe('GET /leaderboard/global', () => {
   })
 })
 
-describe('GET /users/me', () => {
+describe('GET /api/users/me', () => {
   it('returns 401 if no Auth', async () => {
-    const res = await request(app).get('/users/me').expect(401)
+    const res = await request(app).get('/api/users/me').expect(401)
     assert.equal(res.body.error, 'Bearer token required')
   })
 
@@ -279,7 +279,7 @@ describe('GET /users/me', () => {
       email: 'zpogsdfgio@tgoifdjg.com',
       username: 'me',
     })
-    const res = await request(app).get('/users/me').set('Authorization', `Bearer ${token}`).expect(401)
+    const res = await request(app).get('/api/users/me').set('Authorization', `Bearer ${token}`).expect(401)
     assert.equal(res.body.error, 'Invalid or expired token')
   })
 
@@ -289,7 +289,7 @@ describe('GET /users/me', () => {
       email: 'm2@t.co',
       username: 'me2',
     })
-    const res = await request(app).get('/users/me').set('Authorization', `Bearer ${token}`)
+    const res = await request(app).get('/api/users/me').set('Authorization', `Bearer ${token}`)
     assertJson(res)
     assert.ok([200, 401, 404, 500].includes(res.status), `status ${res.status}`)
     if (res.status === 401) assert.equal(res.body.error, 'User not found')
@@ -301,15 +301,15 @@ describe('GET /users/me', () => {
   })
 })
 
-describe('GET /users/:user_id', () => {
+describe('GET /api/users/:user_id', () => {
   it('returns 404 if invalid ObjectId', async () => {
-    const res = await request(app).get('/users/not-a-valid-objectid').expect(404)
+    const res = await request(app).get('/api/users/not-a-valid-objectid').expect(404)
     assert.equal(res.body.error, 'User not found')
   })
 
   it('returns JSON if valid ObjectId', async () => {
     const id = new ObjectId().toHexString()
-    const res = await request(app).get(`/users/${id}`)
+    const res = await request(app).get(`/api/users/${id}`)
     assertJson(res)
     assert.ok([200, 404, 500].includes(res.status), `status ${res.status}`)
     if (res.status === 404) assert.equal(res.body.error, 'User not found')
@@ -317,10 +317,10 @@ describe('GET /users/:user_id', () => {
   })
 })
 
-describe('GET /users/:user_id/submissions', () => {
+describe('GET /api/users/:user_id/submissions', () => {
   it('returns JSON', async () => {
     const id = new ObjectId().toHexString()
-    const res = await request(app).get(`/users/${id}/submissions`)
+    const res = await request(app).get(`/api/users/${id}/submissions`)
     assertDbBackedGet(res, { okStatuses: [200, 503] })
     if (res.status === 200) {
       assert.ok(Array.isArray(res.body.items))
